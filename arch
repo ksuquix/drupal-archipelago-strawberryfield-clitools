@@ -1,0 +1,96 @@
+#!/bin/bash
+
+base=$(dirname $0)
+. $base/settings.ini
+. $base/functions.ini
+
+OBJ=$(abbr_object $1)
+shift
+
+case $1 in
+    list)
+        # no other args for now
+        get_list "$OBJ" | straw_extract_list | straw_summarize "$OBJ"
+        ;;
+    fetch)
+        # 2nd arg is uuid
+        fetch "$OBJ" "$2"
+        ;;
+    fetchstraw)
+        # uuid
+        fetch "$OBJ" "$2" | straw_extract_one
+        ;;
+    get)
+        # uuid
+        fetch "$OBJ" "$2" | straw_extract_one | straw_summarize "$OBJ"
+        ;;
+    search)
+        # search string (title)
+        titlesearch "$OBJ" "$2"  | straw_extract_list | straw_summarize "$OBJ"
+        ;;
+    uploadfiles)
+        # uuid files
+        UUID="$2"
+        shift;shift
+        processfiles "$OBJ" "$@"
+        new=$(fetch "$OBJ" "$UUID" | straw_extract_one | addfiles | php_json_encode)
+        patchobj "$OBJ" "$UUID" "$new"
+        ;;
+    deploy)
+        # title desc tags grp  files
+        TITLE=$(echo "$2" | php_json_encode)
+        DESC=$(echo "$3" | php_json_encode)
+        TAGS='\u0022'${4//,/\\u0022,\\u0022}'\u0022'
+        GRP="$5"
+        shift;shift;shift;shift;shift
+        UUID=$(uuidgen)
+        processfiles "$OBJ" "$@"
+        newobj "$OBJ"
+        ;;
+    *)
+        echo not imp yet
+        ;;
+esac
+#    |  | $(dirname $0)/do_summarize_strawberry.sh
+
+
+#curl -s -L --connect-timeout 30 -H "Accept: application/vnd.api+json;" -H "Content-type: application/vnd.api+json" -XGET --user "$AUTH" "$SITE/jsonapi/node/digital_object" | jq -r '.data | .[] | .attributes.field_descriptive_metadata.value' | $(dirname $0)/do_summarize_strawberry.sh
+
+
+#curl -s -L --connect-timeout 30 -H "Accept: application/vnd.api+json;" -H "Content-type: application/vnd.api+json" -XGET --user "$AUTH" "$SITE/jsonapi/node/digital_object_collection" | jq -r '.data | .[] | .attributes.field_descriptive_metadata.value' | $(dirname $0)/dc_summarize_strawberry.sh
+
+
+exit;
+
+
+functions for things.
+
+
+arch xxx ....
+
+do  (digital object)
+doc (digital object collection)
+
+new
+title tags, etc
+
+tag
+set, add, remove
+
+files
+set, add, remove
+FN will upload
+integer will just modify
+
+list
+returns a list of objects
+filter options
+
+search searches for objects
+filter options
+
+fetch returns object
+full, strawberry, subpiece (title, files, tags, desc, etc)
+
+
+internally functions for fetching, list/searching, encoding, decoding etc.
