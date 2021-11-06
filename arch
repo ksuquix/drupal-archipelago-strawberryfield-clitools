@@ -51,29 +51,3 @@ case $1 in
         echo not imp yet
         ;;
 esac
-exit;
-
-
-new
-title tags, etc
-
-tag
-set, add, remove
-
-files
-set, add, remove
-FN will upload
-integer will just modify
-
-list
-returns a list of objects
-filter options
-
-search searches for objects
-filter options
-
-fetch returns object
-full, strawberry, subpiece (title, files, tags, desc, etc)
-
-
-internally functions for fetching, list/searching, encoding, decoding etc.
