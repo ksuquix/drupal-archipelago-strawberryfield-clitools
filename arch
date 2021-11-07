@@ -45,7 +45,12 @@ case $1 in
         shift;shift;shift;shift;shift
         UUID=$(uuidgen)
         processfiles "$OBJ" "$@"
-        newobj "$OBJ"
+        if [ "$OBJ" = "dc" ]; then
+            newdc "$OBJ"
+        fi
+        if [ "$OBJ" = "do" ]; then
+            newdo "$OBJ"
+        fi
         ;;
     *)
         echo not imp yet
