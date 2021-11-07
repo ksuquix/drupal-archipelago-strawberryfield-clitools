@@ -8,34 +8,6 @@ OBJ=$(abbr_object $1)
 shift
 
 case $1 in
-    list)
-        # no other args for now
-        get_list "$OBJ" | straw_extract_list | straw_summarize "$OBJ"
-        ;;
-    fetch)
-        # 2nd arg is uuid
-        fetch "$OBJ" "$2"
-        ;;
-    fetchstraw|fetchstrawberry)
-        # uuid
-        fetch "$OBJ" "$2" | straw_extract_one
-        ;;
-    get|summarize)
-        # uuid
-        fetch "$OBJ" "$2" | straw_extract_one | straw_summarize "$OBJ"
-        ;;
-    search)
-        # search string (title)
-        titlesearch "$OBJ" "$2"  | straw_extract_list | straw_summarize "$OBJ"
-        ;;
-    uploadfiles)
-        # uuid files
-        UUID="$2"
-        shift;shift
-        processfiles "$OBJ" "$@"
-        new=$(fetch "$OBJ" "$UUID" | straw_extract_one | addfiles | php_json_encode)
-        patchobj "$OBJ" "$UUID" "$new"
-        ;;
     deploy|new)
         # title desc tags grp  files
         TITLE=$(echo "$2" | php_json_encode)
@@ -51,6 +23,62 @@ case $1 in
         if [ "$OBJ" = "do" ]; then
             newdo "$OBJ"
         fi
+        ;;
+    list)
+        # no other args for now
+        get_list "$OBJ" | straw_extract_list | straw_summarize "$OBJ"
+        ;;
+    search)
+        # search string (title)
+        titlesearch "$OBJ" "$2"  | straw_extract_list | straw_summarize "$OBJ"
+        ;;
+    # all after here take uuid as next arg and could be looped
+    fetch)
+        # 2nd arg is uuid
+        fetch "$OBJ" "$2"
+        ;;
+    fetchstraw|fetchstrawberry)
+        # uuid
+        fetch "$OBJ" "$2" | straw_extract_one
+        ;;
+    get|summarize)
+        # uuid
+        fetch "$OBJ" "$2" | straw_extract_one | straw_summarize "$OBJ"
+        ;;
+    uploadfiles)
+        # uuid files
+        UUID="$2"
+        shift;shift
+        processfiles "$OBJ" "$@"
+        new=$(fetch "$OBJ" "$UUID" | straw_extract_one | addfiles | php_json_encode)
+        patchobj "$OBJ" "$UUID" "$new"
+        ;;
+    tag)
+        # uuid subcommand tags
+        # arch do tag "$(arch do search geiko | jq -r '.[0]')" add Human
+        UUID="$2"
+        TAGS='["'${4//,/\",\"}'"]'
+        for U in $UUID; do
+            straw=$(fetch "$OBJ" "$U" | straw_extract_one)
+            case "$3" in
+                set)
+                    straw=$(echo "$straw" | jq ".subjects_local=$TAGS")
+                    ;;
+                add)
+                    straw=$(echo "$straw" | jq ".subjects_local+=$TAGS")
+                    ;;
+                remove)
+                    straw=$(echo "$straw" | jq ".subjects_local-=$TAGS")
+                    ;;
+            esac
+            patchobj "$OBJ" "$U" "$(echo "$straw" | php_json_encode)"
+        done
+        ;;
+    private)
+        # uuid true|false
+        for U in $2; do
+            private "$OBJ" "$U" "$3"
+        done
         ;;
     *)
         echo not imp yet
