@@ -17,10 +17,10 @@ case $1 in
         shift;shift;shift;shift;shift
         UUID=$(uuidgen)
         processfiles "$OBJ" "$@"
-        if [ "$OBJ" = "dc" ]; then
+        if [ "$OBJ" = "digital_object_collection" ]; then
             newdc "$OBJ"
         fi
-        if [ "$OBJ" = "do" ]; then
+        if [ "$OBJ" = "digital_object" ]; then
             newdo "$OBJ"
         fi
         ;;
@@ -52,6 +52,14 @@ case $1 in
         processfiles "$OBJ" "$@"
         new=$(fetch "$OBJ" "$UUID" | straw_extract_one | addfiles | php_json_encode)
         patchobj "$OBJ" "$UUID" "$new"
+        ;;
+    setgroup|group)
+        # uuid group
+        UUID="$2"
+        for U in $UUID; do
+            new=$(fetch "$OBJ" "$U" | straw_extract_one | jq ".ismemberof=$3" | php_json_encode)
+            patchobj "$OBJ" "$U" "$new"
+        done
         ;;
     tag)
         # uuid subcommand tags
