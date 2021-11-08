@@ -56,3 +56,6 @@ tag UUID(s) set|add|remove tags
 
 private UUID(s) true|false
 * uuids space seperated in same argument if used
+
+setgroup|group  UUID group
+* sets ismemberof to sid of a collection
