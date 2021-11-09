@@ -7,6 +7,29 @@ base=$(dirname $0)
 OBJ=$(abbr_object $1)
 shift
 
+if [ "$OBJ" = "help" ]; then
+        cat <<EOF
+  Usage: $(basename $0) OBJTYPE CMD ...
+        OBJTYPE - dc or do (collection or object)
+        CMD:
+          new TITLE DESC TAGS GRP [FILES]...
+            first 4 args are single arguments (tags is comma-seperated).
+          list
+          search TITLESUBSTRING
+          fetch UUID
+          fetchstrawberry UUID
+          summarize UUID
+          uploadfiles UUID [FILES]...
+          group UUID
+          tag UUID set|add|remove TAGS
+          private UUID true|false
+          download UUID
+          attachments UUID
+          addattachments UUID jsonattachments
+EOF
+        exit
+fi
+
 case $1 in
     deploy|new)
         # title desc tags grp  files
@@ -45,7 +68,7 @@ case $1 in
         # uuid
         fetch "$OBJ" "$2" | straw_extract_one | straw_summarize "$OBJ"
         ;;
-    uploadfiles)
+    uploadfiles|upload)
         # uuid files
         UUID="$2"
         shift;shift
@@ -87,6 +110,23 @@ case $1 in
         for U in $2; do
             private "$OBJ" "$U" "$3"
         done
+        ;;
+    download)
+        # uuid
+        for UUID in $2; do
+            fetch "$OBJ" "$UUID" | straw_extract_one | strawdownloads
+        done
+        ;;
+    attachments)
+        # uuid
+        fetch "$OBJ" "$2" | straw_extract_one | strawattachments
+        ;;
+    addattachments)
+        # uuid attachments(json)
+        straw=$(fetch "$OBJ" "$2" | straw_extract_one)
+        straw=$(echo "$straw" | jq --argjson inp "$3" '.images += $inp.images | .models += $inp.models | .documents += $inp.documents')
+        patchobj "$OBJ" "$2" "$(echo "$straw" | php_json_encode)"
+        echo
         ;;
     *)
         echo not imp yet
