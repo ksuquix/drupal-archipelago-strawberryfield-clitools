@@ -31,7 +31,7 @@ EOF
 fi
 
 case $1 in
-    deploy|new)
+    deploy|new|create)
         # title desc tags grp  files
         TITLE=$(echo "$2" | php_json_encode)
         DESC=$(echo "$3" | php_json_encode)
@@ -80,7 +80,7 @@ case $1 in
         # uuid group
         UUID="$2"
         for U in $UUID; do
-            new=$(fetch "$OBJ" "$U" | straw_extract_one | jq ".ismemberof=$3" | php_json_encode)
+            new=$(fetch "$OBJ" "$U" | straw_extract_one | jq ".ismemberof=\"$3\"" | php_json_encode)
             patchobj "$OBJ" "$U" "$new"
         done
         ;;
@@ -119,7 +119,9 @@ case $1 in
         ;;
     attachments)
         # uuid
-        fetch "$OBJ" "$2" | straw_extract_one | strawattachments
+        for U in $2; do
+            fetch "$OBJ" "$U" | straw_extract_one | strawattachments
+        done
         ;;
     addattachments)
         # uuid attachments(json)
